@@ -1,14 +1,8 @@
 <?php
+  
+   require "classes/DB.php";
 
-	require "classes/DB.php";
-
-	$conn=DB::getInstance()->getDB();
-
-	session_start();
-
-	$visitas_count= 0;
-
-
+   $conn=DB::getInstance()->getDB();
 ?>
 
 <!DOCTYPE html>
@@ -18,132 +12,237 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Blog 5</title>
-    <link rel="icon" href="imagens/favicon.png">
+     <script src="jquery.js"></script>
+
+
+    <title>Blogue 6</title>
+    <link rel="icon" href="img/ifsem-fundo.png">
 
     <!-- Bootstrap -->
     <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
-</head>
+     <link href="bootstrap-4.3.1-dist/css/bootstrap.min.css" rel="stylesheet">
 
-<body>
+  
+    <link href="css/StyleIndex.css" media="screen" rel="stylesheet">
 
-	<nav class="navbar navbar-fixed-top navbar-inverse navbar-transparent">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
 
-		 <div class="container">
+  <body >
 
-		 	
+      <?php include "header.php";
 
-		<div class="navbar-header">
 
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#barra-nav">
+     ?>
+        <br><br><br><br><br>
 
-				<span class="sr-only">alternar navegação</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
+        <div class="container">
 
-			</button>
+        <div class="row">
 
-		
+          <div class="col-md-2"></div>
 
-	</div>
+    <div class="col-md-8">
 
-			<div class="collapse navbar-collapse" id="barra-nav">
+      <?php
 
-				<ul class="nav navbar-nav navbar-right"  style="padding:10px 10px; color:yellow;">
- <li style="padding:0px 10px;"><a href="index.php" style="color:yellow;"> Home</a></li>
-                    <li style="padding:0px 10px;"><a href="#" style="color:yellow;"> Delphi</a></li>
-                    <li style="padding:0px 10px;"><a href="#" style="color:yellow;"> PHP</a></li>
-                    <li style="padding:0px 10px;"><a href="#" style="color:yellow;">Java</a></li>
-                    <li style="padding:0px 10px;"><a href="login_adm.php" style="color:yellow;"> Administração</a></li>
-    	<li style="padding:0px 10px;">&nbsp</li>
-
-				</ul style="padding:0px 10px;">
-			</div>
-		</div>
-
-		</nav>
+      if(isset($_GET['id'])){
 
 
 
+        $id=$_GET['id'];
 
-			<div class="container">
+ 
+      $query_sel2=$conn->prepare("SELECT * FROM POSTS WHERE ID_POSTS= ?");
+        $query_sel2->execute(array($id));
 
-			
-					<br><br><br><br>
+        while($linhas2 = $query_sel2->fetchObject()){
 
-				<div class="col-md-12">
+          $visitas= $linhas2->visitas + 1;
 
-
-					<div class="row">
-
-						
-
-						<div class="col-md-6">
-
-							<?php
-
-							if(isset($_GET['id'])){
-
-								$id=$_GET['id'];
+     $query_update=$conn->prepare("UPDATE POSTS SET VISITAS = ? WHERE ID_POSTS= ?");
+     $query_update->execute(array($visitas, $id));
 
 
-								$query_sel=$conn->prepare("SELECT * FROM POSTS WHERE ID_POSTS= ?");
-								$query_sel->execute(array($id));
+          
+      ?>
 
-								while($linhasA= $query_sel->fetchObject()){
+     <img src="upload/<?php echo $linhas2->imagem;?> " width="35%" height="25%">
+     <br><br>
 
-									$visitas_count=$linhasA->visitas + 1;
+      <h2><?php  echo utf8_encode($linhas2->titulo); ?></h2>
 
-									
+      <p style="text-align: justify; text-indent:20px; font-family:calibri; font-size: 19px;">
 
-								}
-									$dados=array($visitas_count, $id);
+       
+         <?php  echo utf8_encode($linhas2->texto); ?>
+      </p>
 
+        <br><br>
+      <span class="visitas" style="font-size: 17px;">Visitas <?php echo $linhas2->visitas ?> </span>
 
-							$query_update=$conn->prepare("UPDATE POSTS SET VISITAS = ? WHERE ID_POSTS= ?");
-							$query_update->execute($dados);
+ </div>
 
-
-
-								$query_sel=$conn->prepare("SELECT * FROM POSTS WHERE ID_POSTS= ?");
-								$query_sel->execute(array($id));
-
-								while($linhas= $query_sel->fetchObject()){
-
-									
-
-
-							?>
+<?php
+      
+    }
+  
+  }
 
 
-	 <h1><?php echo $linhas->titulo; ?></h1>
-	 <img src="<?php echo $linhas->imagem; ?>"  widht="100" height="100">
+     if(isset($_POST["comentario"])){
 
 
-	 <p style="padding:10px;"><?php   echo utf8_encode($linhas->texto);?></p>
+        $id_post=$_GET['id'];
 
-	 <p>visitas: <?php 
+        $nome=strip_tags(filter_input(INPUT_POST, "nome"));
+        $comentario=$_POST['coment'];
+        $data=date("Y-m-d");
 
-
-	 $sel="SELECT * FROM POSTS WHERE ID_POSTS= ?";
-	 echo $visitas_count; ?></p>
-
-	<?php
+        $dados=array($nome, $comentario, $data, $id_post);
 
 
-								}
+        $query_insert=$conn->prepare("INSERT INTO COMENTARIOS VALUES('',?, ?, ?, ?);");
+        $query_insert->execute($dados);
 
-							}
-
-							
-
-							?>
-
-	</div>
+     }
+      ?>
 
 </div>
+</div>
+
+<br><br>
+
+<?php
+    
+
+    if(isset($_POST['comentario'])){
+
+        ?>
+
+          <style>
+
+           input#botao{
+
+            display:none;
+           }
+        </style>
+
+        <?php
+
+
+
+    }
+?>
+
+  <div class="container">
+
+    <div class="row">
+
+        <div class="col-md-2"></div>
+
+      <div class="col-md-7">
+
+
+        <form action="posts.php?id=<?php echo $id; ?>"" method="post">
+
+
+          <h2>Comentários</h2>
+          <div class="form-group">
+
+            <label> Nome </label>
+            <input type="text" class="form-control" name="nome">
+          </div>
+
+
+          <input type="hidden" name="comentario" value="ok">
+
+          <div class="form-group">
+
+            <label> Comentário </label>
+            <textarea  class="form-control" name="coment" rows="10">   </textarea> 
+          </div>
+          <br><br>
+         <div align="center"><input type="submit" id="botao" class="btn btn-primary" value="Enviar">
+         </div>
+        </form>
+      </div>
+    </div>
+
+
+  </div>
+       <br><br><br>
+
+       <div class="container">
+
+      
+
+
+         
+
+            <div class="col-md-2"></div>
+ 
+                 
+              <div class="col-md-5">
+                  <h2>Comentários</h2> 
+
+              
+                  <br>
+
+
+ <?php
+
+              if(isset($_GET['id'])){
+
+
+
+                $id_post=$_GET['id'];
+
+
+                $query_sel3=$conn->prepare("SELECT * FROM COMENTARIOS WHERE POST= ?");
+                $query_sel3->execute(array($id_post));
+
+
+                while($linhas3 = $query_sel3->fetchObject()){
+
+              
+             ?>
+                  <div class="row">
+                
+
+ <div class="col-md-7">
+                      <img src="img/6.jpg" width="10%" height="35%">
+
+                      <span style="font-size: 18px; font-weight: bold;"
+                      > <?php echo $linhas3->nome ?></span><br>
+
+                     <span style="font-size: 18px;"><?php echo $linhas3->comentario; ?></span>
+                    </div>
+ </div>
+                     <?php
+
+                      }
+                    }
+                     ?>
+                  
+
+               </div>
+
+          </div>
+
+       </div> 
+
+       <br><br><br><br>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="bootstrap-4.3.1-dist/js/bootstrap.js"></script>
+
 
 </body>
 </html>
